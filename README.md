@@ -9,7 +9,6 @@ A fast, dark-themed personal portfolio built as a static site. No backend, no da
 - **Framer Motion** for animations
 - **React Router** (hash routing) for multi-page navigation
 - **@react-pdf/renderer** for the résumé, generated on the fly from your data
-- **Web3Forms** for the contact form (emails you directly, no server)
 - **GitHub Actions** → **GitHub Pages** for hosting
 
 ## Local development
@@ -35,13 +34,11 @@ The downloadable résumé is **generated as a PDF from these same data files** (
 `src/resume/ResumeDocument.tsx`), so anything you add here — a new project, a new role —
 shows up in the résumé automatically. There's no PDF file to keep in sync.
 
-## Contact form setup (required for the form to work)
+## Contact
 
-1. Go to [web3forms.com](https://web3forms.com) and enter your email — you'll get a free **access key**.
-2. Open `src/pages/Contact.tsx` and replace `YOUR_WEB3FORMS_ACCESS_KEY` with that key.
-3. Messages will be delivered to the email tied to the key.
-
-The access key is safe to commit — Web3Forms keys are designed to be public on the client.
+The contact page is fully static with no third-party service: an "Email me" button
+(`mailto:`), a copy-to-clipboard button for the address, and direct LinkedIn / GitHub
+links. To change where it points, edit `email` and `socials` in `src/data/profile.ts`.
 
 ## Deploying to GitHub Pages
 

@@ -1,44 +1,25 @@
-import { FormEvent, useState } from "react";
-import { Github, Linkedin, Mail, MapPin, Send } from "lucide-react";
+import { useState } from "react";
+import { Copy, Check, Github, Linkedin, Mail, MapPin } from "lucide-react";
 import { profile } from "../data/profile";
 import { PageHeader, Reveal } from "../components/Section";
+import Toast, { ToastState } from "../components/Toast";
 
-// Get a free key at https://web3forms.com — it's tied to your email and is safe
-// to expose client-side. Replace the placeholder below with your own key.
-const WEB3FORMS_ACCESS_KEY = "YOUR_WEB3FORMS_ACCESS_KEY";
-
-type Status = "idle" | "submitting" | "success" | "error";
+const MAILTO = `mailto:${profile.email}?subject=${encodeURIComponent(
+  "Let's work together"
+)}`;
 
 export default function Contact() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("submitting");
-    setError("");
-
-    const form = e.currentTarget;
-    const data = new FormData(form);
-
+  async function copyEmail() {
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: data,
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        setStatus("success");
-        form.reset();
-      } else {
-        setStatus("error");
-        setError(json.message || "Something went wrong. Please try again.");
-      }
+      await navigator.clipboard.writeText(profile.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      setToast({ type: "success", message: "Email address copied to your clipboard." });
     } catch {
-      setStatus("error");
-      setError("Network error. Please try again, or email me directly.");
+      setToast({ type: "error", message: `Couldn't copy automatically. My email is ${profile.email}.` });
     }
   }
 
@@ -47,113 +28,65 @@ export default function Contact() {
       <PageHeader
         eyebrow="Contact"
         title="Get in touch"
-        subtitle="Have a project in mind, or want to talk full-stack architecture and AI agents? Drop me a message and I'll get back to you."
+        subtitle="Have a project in mind, or want to talk full-stack architecture and AI? The best way to reach me is by email, and I usually reply within a day or two."
       />
 
-      <div className="grid gap-8 lg:grid-cols-5">
-        {/* Form */}
-        <Reveal className="lg:col-span-3">
-          <form onSubmit={handleSubmit} className="card space-y-6 p-6 sm:p-8">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Primary email card */}
+        <Reveal className="lg:col-span-2">
+          <div className="card flex h-full flex-col justify-center gap-6 p-8">
             <div>
-              <h2 className="text-xl font-bold">Send a message</h2>
-              <p className="mt-1 text-sm text-muted">
-                Fill in the form below and I'll usually reply within a day or two.
+              <h2 className="text-2xl font-bold">Let's talk</h2>
+              <p className="mt-2 max-w-md text-muted">
+                Drop me a line about a role, a project, or just to say hello. I read everything that comes in.
               </p>
             </div>
 
-            <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
-            <input type="hidden" name="subject" value="New message from your portfolio" />
-            <input type="hidden" name="from_name" value="Portfolio Contact Form" />
-            {/* Honeypot field to deter spam bots */}
-            <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="mb-2 block text-sm font-medium">
-                  Name <span className="text-accent-soft">*</span>
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  placeholder="Jane Doe"
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted/50 focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="mb-2 block text-sm font-medium">
-                  Email <span className="text-accent-soft">*</span>
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="jane@example.com"
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted/50 focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="message" className="mb-2 block text-sm font-medium">
-                Message <span className="text-accent-soft">*</span>
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                required
-                rows={7}
-                placeholder="Tell me a bit about your project, role, or what you'd like to build…"
-                className="w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 text-sm leading-relaxed outline-none transition-colors placeholder:text-muted/50 focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
-              />
-              <p className="mt-2 text-xs text-muted/70">
-                The more context you share, the better I can help.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <button type="submit" disabled={status === "submitting"} className="btn-primary disabled:opacity-60">
-                {status === "submitting" ? "Sending…" : "Send message"}
-                <Send size={16} />
+            <div className="flex flex-wrap items-center gap-3">
+              <a href={MAILTO} className="btn-primary">
+                <Mail size={16} /> Email me
+              </a>
+              <button type="button" onClick={copyEmail} className="btn-ghost">
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? "Copied" : "Copy address"}
               </button>
-              {status === "success" && (
-                <p className="text-sm font-medium text-accent-soft">
-                  Thanks! Your message has been sent. I'll be in touch soon.
-                </p>
-              )}
-              {status === "error" && <p className="text-sm font-medium text-red-400">{error}</p>}
             </div>
-          </form>
+
+            <p className="font-mono text-sm text-muted">{profile.email}</p>
+          </div>
         </Reveal>
 
-        {/* Direct links */}
-        <Reveal delay={0.1} className="lg:col-span-2">
+        {/* Social / direct links */}
+        <Reveal delay={0.1}>
           <div className="card h-full space-y-5 p-6 sm:p-8">
-            <div>
-              <h3 className="font-mono text-sm text-accent-soft">Other ways to reach me</h3>
-              <p className="mt-1 text-sm text-muted">Prefer email or socials? Reach me directly here.</p>
-            </div>
-            <a href={`mailto:${profile.email}`} className="flex items-center gap-3 text-sm link-muted">
-              <Mail size={18} className="text-accent-soft" />
-              <span className="break-all">{profile.email}</span>
-            </a>
-            <a href={profile.socials.github} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm link-muted">
+            <h3 className="font-mono text-sm text-accent-soft">Find me online</h3>
+            <a
+              href={profile.socials.github}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 text-sm link-muted"
+            >
               <Github size={18} className="text-accent-soft" />
               <span>GitHub</span>
             </a>
-            <a href={profile.socials.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm link-muted">
+            <a
+              href={profile.socials.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 text-sm link-muted"
+            >
               <Linkedin size={18} className="text-accent-soft" />
               <span>LinkedIn</span>
             </a>
-            <div className="flex items-center gap-3 border-t border-border pt-4 text-sm text-muted">
+            <div className="flex items-center gap-3 border-t border-border pt-5 text-sm text-muted">
               <MapPin size={18} className="text-accent-soft" />
               <span>{profile.location}</span>
             </div>
           </div>
         </Reveal>
       </div>
+
+      <Toast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }
